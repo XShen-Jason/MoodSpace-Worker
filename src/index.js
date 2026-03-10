@@ -112,7 +112,7 @@ export default {
         return new Response(obj.body, {
           headers: {
             'Content-Type': getMime(filePath),
-            'Cache-Control': 'public, max-age=604800', // 7 days for assets
+            'Cache-Control': 'public, max-age=604800, immutable', // 7 days for assets
           },
         });
       }
@@ -174,7 +174,10 @@ export default {
       const cfgRaw = await env.ROMANCESPACE_KV.get(projectId);
       if (!cfgRaw) return notFoundResponse();
 
-      const obj = await env.ROMANCESPACE_R2.get(`pages/${projectId}.html`);
+      let obj = await env.ROMANCESPACE_R2.get(`pages/${projectId}/index.html`);
+      if (!obj) {
+        obj = await env.ROMANCESPACE_R2.get(`pages/${projectId}.html`);
+      }
       if (!obj) return notFoundResponse();
 
       return new Response(await obj.text(), {
@@ -198,7 +201,10 @@ export default {
     if (!cfgRaw) return notFoundResponse();
 
     // 3. Fetch pre-rendered HTML from R2
-    const obj = await env.ROMANCESPACE_R2.get(`pages/${projectId}.html`);
+    let obj = await env.ROMANCESPACE_R2.get(`pages/${projectId}/index.html`);
+    if (!obj) {
+      obj = await env.ROMANCESPACE_R2.get(`pages/${projectId}.html`);
+    }
     if (!obj) return notFoundResponse();
 
     const html = injectViralFooter(await obj.text());
