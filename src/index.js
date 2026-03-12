@@ -284,7 +284,10 @@ async function handleRequest(request, env, ctx) {
   }
 
   // ── Normal mode: Cache API → KV → R2 → Cache ──────────────────
-  const cacheKey = new Request(`https://cache.rs.internal/${subdomain}`);
+  // Normalize URL for caching (Strip query params so that cache purge by URL works)
+  const cacheUrl = new URL(request.url);
+  cacheUrl.search = ""; 
+  const cacheKey = new Request(cacheUrl.toString());
   const cached = await caches.default.match(cacheKey);
   if (cached) return cached;
 
