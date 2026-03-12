@@ -216,12 +216,20 @@ async function handleRequest(request, env, ctx) {
 
       const html = await htmlObj.text();
       const schema = schemaObj ? JSON.parse(await schemaObj.text()) : null;
-      const defaults = {};
+      const data = {};
       (schema?.fields ?? []).forEach((f) => {
-        if (f.default !== undefined) defaults[f.key] = f.default;
+        const key = typeof f === 'string' ? f : (f.id || f.key);
+        const defaultValue = typeof f === 'string' ? (f.default ?? '') : (f.default ?? '');
+        data[key] = defaultValue;
       });
 
-      return new Response(html.replace(/\{\{(\w+)\}\}/g, (m, k) => escapeHtml(defaults[k] ?? '')), {
+      // Simple injection matching Backend's injectData pattern
+      const rendered = html.replace(/\{\{(\w+)\}\}/g, (match, key) => {
+        const val = data[key] ?? '';
+        return escapeHtml(String(val));
+      });
+
+      return new Response(rendered, {
         headers: {
           'Content-Type': 'text/html;charset=UTF-8',
           'Cache-Control': 'no-cache, no-store',
