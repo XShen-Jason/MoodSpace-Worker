@@ -1,6 +1,6 @@
 # RomanceSpace Worker
 
-该目录存放 Cloudflare Worker 边缘节点的逻辑代码。该 Worker 负责拦截平台所有的通配符子域名请求，并通过查询 KV 或 D1 渲染对应的项目页面。
+VPS API server (Backend) 作为 CQRS 的控制平面处理所有写操作。该 Worker 则是纯粹的“只读”渲染引擎，负责拦截平台所有的通配符子域名请求，并通过查询 KV 或 R2 记录渲染对应的项目页面。
 
 ## 本地开发指南
 
