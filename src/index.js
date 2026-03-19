@@ -66,7 +66,7 @@ function getMime(filename) {
 /** 404 — redirect to main platform. */
 /** 404 — redirect to main platform. */
 function notFoundResponse() {
-  return Response.redirect('https://www.885201314.xyz', 302);
+  return Response.redirect('https://www.moodspace.xyz', 302);
 }
 
 /** 500 — graceful error page for infrastructure failures. */
@@ -88,7 +88,7 @@ function serverErrorResponse(detail = '') {
 <body>
   <h1>💔 页面暂时无法加载</h1>
   <p>服务器正在努力恢复中，请稍后再试。</p>
-  <p><a href="https://www.885201314.xyz">← 返回 Emotional Space 主页</a></p>
+  <p><a href="https://www.moodspace.xyz">← 返回主页</a></p>
 </body>
 </html>`;
   return new Response(body, {
@@ -149,14 +149,14 @@ async function handleRequest(request, env, ctx) {
   const method = request.method;
 
   // ── 0. Doc site passthrough ────────────────────────────────────
-  if (host === 'docs.885201314.xyz' || host === 'document.885201314.xyz') {
+  if (host === 'docs.moodspace.xyz' || host === 'document.moodspace.xyz') {
     const fwd = new URL(request.url);
     fwd.hostname = 'emotionalspace-docs.pages.dev';
     return fetch(fwd.toString(), request);
   }
 
   // ── /assets/ and /preview/ work on any hostname (incl. workers.dev for local dev) ──
-  // www.885201314.xyz is served by VPS Nginx — Worker never touches it.
+  // www.moodspace.xyz is served by VPS Nginx — Worker never touches it.
 
   // ── GET /assets/{type}/{...filepath} — static template assets
   if (path.startsWith('/assets/')) {
@@ -164,10 +164,10 @@ async function handleRequest(request, env, ctx) {
     const type = parts[2];
     const filePath = parts.slice(3).join('/');
 
-    const meta = await getTemplateMeta(env.EMOTIONALSPACE_KV, type);
+    const meta = await getTemplateMeta(env.MOODSPACE_KV, type);
     if (!meta) return new Response('Not found', { status: 404 });
 
-    const obj = await env.EMOTIONALSPACE_R2.get(`templates/${type}/${meta.version}/${filePath}`);
+    const obj = await env.MOODSPACE_R2.get(`templates/${type}/${meta.version}/${filePath}`);
     if (!obj) return new Response('Asset not found', { status: 404 });
 
     return new Response(obj.body, {
@@ -182,12 +182,12 @@ async function handleRequest(request, env, ctx) {
   // ── GET /preview/{type} — render template with schema defaults
   if (path.startsWith('/preview/')) {
     const type = path.split('/')[2];
-    const meta = await getTemplateMeta(env.EMOTIONALSPACE_KV, type);
+    const meta = await getTemplateMeta(env.MOODSPACE_KV, type);
     if (!meta) return new Response('Template not found', { status: 404 });
 
     const [htmlObj, schemaObj] = await Promise.all([
-      env.EMOTIONALSPACE_R2.get(`templates/${type}/${meta.version}/index.html`),
-      env.EMOTIONALSPACE_R2.get(`templates/${type}/${meta.version}/schema.json`),
+      env.MOODSPACE_R2.get(`templates/${type}/${meta.version}/index.html`),
+      env.MOODSPACE_R2.get(`templates/${type}/${meta.version}/schema.json`),
     ]);
     if (!htmlObj) return new Response('Template HTML missing in R2', { status: 404 });
 
@@ -244,10 +244,10 @@ async function handleRequest(request, env, ctx) {
 
   // ── Preview mode: bypass all caches, read R2 directly ─────────
   if (isPreview) {
-    const cfgRaw = await env.EMOTIONALSPACE_KV.get(subdomain);
+    const cfgRaw = await env.MOODSPACE_KV.get(subdomain);
     if (!cfgRaw) return notFoundResponse();
 
-    const obj = await fetchPageHtml(env.EMOTIONALSPACE_R2, subdomain);
+    const obj = await fetchPageHtml(env.MOODSPACE_R2, subdomain);
     if (!obj) return notFoundResponse();
 
     return new Response(await obj.text(), {
@@ -267,13 +267,13 @@ async function handleRequest(request, env, ctx) {
   const cached = await caches.default.match(cacheKey);
   if (cached) return cached;
 
-  const cfgRaw = await env.EMOTIONALSPACE_KV.get(subdomain);
+  const cfgRaw = await env.MOODSPACE_KV.get(subdomain);
   if (!cfgRaw) return notFoundResponse();
 
   let cfg;
   try { cfg = JSON.parse(cfgRaw); } catch { return notFoundResponse(); }
 
-  const obj = await fetchPageHtml(env.EMOTIONALSPACE_R2, subdomain);
+  const obj = await fetchPageHtml(env.MOODSPACE_R2, subdomain);
   if (!obj) return notFoundResponse();
 
   let html = await obj.text();
@@ -282,7 +282,7 @@ async function handleRequest(request, env, ctx) {
   // Compare the tmpl-version stamp in the stored HTML against the current KV meta.
   // If stale, trigger a one-shot background re-render on the VPS — no R2 writes here.
   if (cfg.template) {
-    const tmplMeta = await getTemplateMeta(env.EMOTIONALSPACE_KV, cfg.template);
+    const tmplMeta = await getTemplateMeta(env.MOODSPACE_KV, cfg.template);
     if (tmplMeta?.version) {
       const isStale = !html.includes(`<meta name="tmpl-version" content="${tmplMeta.version}">`);
       if (isStale) {

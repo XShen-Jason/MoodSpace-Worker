@@ -1,23 +1,23 @@
-name = "emotionalspace-worker"
+name = "moodspace-worker"
 main = "src/index.js"
 compatibility_date = "2024-03-05"
 
 # Worker only handles wildcard subdomains (user project pages).
-# www.885201314.xyz is served by VPS Nginx directly — do NOT add it here.
+# www.moodspace.xyz is served by VPS Nginx directly — do NOT add it here.
 routes = [
-  { pattern = "*.885201314.xyz", zone_name = "885201314.xyz" }
+  { pattern = "*.moodspace.xyz", zone_name = "moodspace.xyz" }
 ]
 
 # KV Namespace — routing config + template metadata
 [[kv_namespaces]]
-binding = "EMOTIONALSPACE_KV"
+binding = "MOODSPACE_KV"
 id      = "f8b29e65a7c34bad905e2edd1f90841e"
 
 # R2 Bucket — template files (HTML/CSS/JS/images) + pre-rendered user pages
 [[r2_buckets]]
-binding     = "EMOTIONALSPACE_R2"
-bucket_name = "emotionalspace-templates"
+binding     = "MOODSPACE_R2"
+bucket_name = "moodspace-templates"
 
 # ADMIN_KEY must be set as a Secret in Cloudflare Dashboard:
-# Workers → emotionalspace-worker → Settings → Variables → Add Secret → ADMIN_KEY
+# Workers → moodspace-worker → Settings → Variables → Add Secret → ADMIN_KEY
 # DO NOT put the actual key value here.
